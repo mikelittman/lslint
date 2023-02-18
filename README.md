@@ -7,7 +7,7 @@
 See [Releases](https://github.com/Makopo/lslint/releases) for binaries.
 Latest release resides [here](https://github.com/Makopo/lslint/releases/latest).
 
-**Evaluating moving to Circle CI... please wait for a followup.**
+**Evaluating moving to Circle CI or GitHub Action... please wait for a followup.**
 
 #### Compiling
 * `make` should be all that's required on POSIX systems, and a solution file exists for VS2015 on Windows.
