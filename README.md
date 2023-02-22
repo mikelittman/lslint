@@ -1,13 +1,11 @@
 `lslint` is a tool to check the syntactic and semantic validity of Second Life LSL scripts.
 
-[![Build Status](https://travis-ci.org/Makopo/lslint.svg?branch=master)](https://travis-ci.org/Makopo/lslint)
+[![Makopo](https://circleci.com/gh/Makopo/lslint.svg?style=svg)](https://app.circleci.com/pipelines/github/Makopo/lslint)
 
 #### Releases
 
 See [Releases](https://github.com/Makopo/lslint/releases) for binaries.
 Latest release resides [here](https://github.com/Makopo/lslint/releases/latest).
-
-**Evaluating moving to Circle CI or GitHub Action... please wait for a followup.**
 
 #### Compiling
 * `make` should be all that's required on POSIX systems, and a solution file exists for VS2015 on Windows.
