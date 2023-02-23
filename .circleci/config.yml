@@ -176,6 +176,14 @@ jobs:
             RELEASE_BODY="$(tail -n +2 artifacts/kwdb_version.txt)"
             go install github.com/tcnksm/ghr@latest
             ghr -t "${GITHUB_TOKEN}" -u "${CIRCLE_PROJECT_USERNAME}" -r "${CIRCLE_PROJECT_REPONAME}" -c "${CIRCLE_SHA1}" -b "${RELEASE_BODY}" -delete "${CIRCLE_TAG}" zips/
+      - run:
+          name: Call LSL plugin pipeline
+          command: |
+            curl --location -X POST 'https://circleci.com/api/v2/project/github/Makopo/sublime-text-lsl/pipeline' \
+            --header 'Content-Type: application/json' \
+            -d "{\"branch\": \"master\", \"parameters\": {\"version\": \"${CIRCLE_TAG}\"}}", \
+            -u "${CIRCLECI_API_TOKEN}:"
+
   check-builtins:
     docker:
       - image: cimg/python:3.11
