@@ -181,8 +181,14 @@ jobs:
           command: |
             curl --location -X POST 'https://circleci.com/api/v2/project/github/Makopo/sublime-text-lsl/pipeline' \
             --header 'Content-Type: application/json' \
-            -d "{\"branch\": \"master\", \"parameters\": {\"version\": \"${CIRCLE_TAG}\"}}", \
+            -d "{\"branch\": \"master\", \"parameters\": {\"version\": \"${CIRCLE_TAG}\"}}" \
             -u "${CIRCLECI_API_TOKEN}:"
+      - run:
+          name: Call LSL Tooltip plugin pipeline
+          command: |
+            curl --location -X POST 'https://circleci.com/api/v2/project/github/Makopo/sublime-text-tooltip-lsl/pipeline' \
+            --header 'Content-Type: application/json' \
+            -d "{\"branch\": \"master\"}" -u "${CIRCLECI_API_TOKEN}:"
 
   check-builtins:
     docker:
