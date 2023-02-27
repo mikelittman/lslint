@@ -99,7 +99,7 @@ jobs:
             tar -xf win_flex_bison-2.5.25.zip -C C:\win_flex_bison
       - run:
           name: compile
-          command: | 
+          command: |
             $vswhere = "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe"
             $instanceId = & $vswhere -property instanceId -format value
             $installationPath = & $vswhere -property installationPath -format value
@@ -132,7 +132,7 @@ jobs:
             tar -xf win_flex_bison-2.5.25.zip -C C:\win_flex_bison
       - run:
           name: compile
-          command: | 
+          command: |
             $vswhere = "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe"
             $instanceId = & $vswhere -property instanceId -format value
             $installationPath = & $vswhere -property installationPath -format value
@@ -214,6 +214,9 @@ jobs:
               git add builtins.txt builtins_txt.cc kwdb_version.txt
               git commit -m "update builtins_txt [ci skip]"
               git push --set-upstream origin ${CIRCLE_BRANCH}
+              tagname="nightly_build_$(date +%Y%m%d%H%M%S)"
+              git tag -a ${tagname} -m "automatically created"
+              git push --set-upstream origin ${CIRCLE_BRANCH} ${tagname}
             fi
 
 parameters:
