@@ -1049,6 +1049,7 @@ const char *builtins_txt[] = {
 "const integer PRIM_REFLECTION_PROBE = 44",
 "const integer PRIM_REFLECTION_PROBE_BOX = 1",
 "const integer PRIM_REFLECTION_PROBE_DYNAMIC = 2",
+"const integer PRIM_REFLECTION_PROBE_MIRROR = 4",
 "const integer PRIM_RENDER_MATERIAL = 49",
 "const integer PRIM_ROTATION = 8",
 "const integer PRIM_ROT_LOCAL = 29",
