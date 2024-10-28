@@ -365,7 +365,7 @@ const char *builtins_txt[] = {
 "integer llReturnObjectsByOwner( key owner, integer scope )",
 "void llRezAtRoot( string inventory, vector pos, vector vel, rotation rot, integer param )",
 "void llRezObject( string inventory, vector pos, vector vel, rotation rot, integer param )",
-"void llRezObjectWithParams( string itemname, list params )",
+"key llRezObjectWithParams( string itemname, list params )",
 "float llRot2Angle( rotation rot )",
 "vector llRot2Axis( rotation rot )",
 "vector llRot2Euler( rotation q )",
