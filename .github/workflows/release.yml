@@ -30,7 +30,7 @@ jobs:
       - name: Get LSL definitions commit hash
         id: lsl_hash
         run: |
-          LSL_HASH=$(curl -s https://api.github.com/repos/secondlife/lsl-definitions/commits/master | jq -r '.sha[0:7]')
+          LSL_HASH=$(cd lsl-definitions && git rev-parse --short=7 HEAD)
           echo "lsl_hash=$LSL_HASH" >> $GITHUB_OUTPUT
 
       - name: Build
@@ -80,7 +80,7 @@ jobs:
       - name: Get LSL definitions commit hash
         id: lsl_hash
         run: |
-          LSL_HASH=$(curl -s https://api.github.com/repos/secondlife/lsl-definitions/commits/master | jq -r '.sha[0:7]')
+          LSL_HASH=$(cd lsl-definitions && git rev-parse --short=7 HEAD)
           echo "lsl_hash=$LSL_HASH" >> $GITHUB_OUTPUT
 
       - name: Build
@@ -133,7 +133,7 @@ jobs:
       - name: Get LSL definitions commit hash
         id: lsl_hash
         run: |
-          $LSL_HASH = (Invoke-RestMethod -Uri "https://api.github.com/repos/secondlife/lsl-definitions/commits/master").sha.Substring(0,7)
+          $LSL_HASH = (cd lsl-definitions && git rev-parse --short=7 HEAD)
           echo "lsl_hash=$LSL_HASH" >> $env:GITHUB_OUTPUT
 
       - name: Build
@@ -166,7 +166,7 @@ jobs:
       - name: Get version info
         id: version
         run: |
-          LSL_HASH=$(curl -s https://api.github.com/repos/secondlife/lsl-definitions/commits/master | jq -r '.sha[0:7]')
+          LSL_HASH=$(cd lsl-definitions && git rev-parse --short=7 HEAD)
           SRC_HASH=$(echo "${{ github.sha }}" | cut -c1-7)
           VERSION="lsl-${LSL_HASH}-src-${SRC_HASH}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
