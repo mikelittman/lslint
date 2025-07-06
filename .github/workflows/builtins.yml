@@ -39,5 +39,10 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .
-          git commit -m "Auto-update builtins [skip ci]"
+          git commit -m "Auto-update builtins"
           git push
+
+      - name: Trigger release workflow
+        if: steps.check-changes.outputs.changes == 'true'
+        run: |
+          echo "Builtins updated - release workflow will be triggered by the push to master"

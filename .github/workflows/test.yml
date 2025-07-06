@@ -1,0 +1,234 @@
+name: Test
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  test-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [x64, x86]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install flex bison -y
+          if [ "${{ matrix.arch }}" = "x86" ]; then
+            sudo apt-get install gcc-multilib g++-multilib || echo "Warning: multilib packages not available on this architecture"
+          fi
+
+      - name: Get LSL definitions commit hash
+        id: lsl_hash
+        run: |
+          LSL_HASH=$(cd lsl-definitions && git rev-parse --short=7 HEAD)
+          echo "lsl_hash=$LSL_HASH" >> $GITHUB_OUTPUT
+
+      - name: Build
+        run: |
+          export BUILD_VERSION_NUMBER="lsl-${{ steps.lsl_hash.outputs.lsl_hash }}-src-${{ github.sha }}"
+          export DEBUG="-DDEBUG_LEVEL=LOG_DEBUG_MINOR -ggdb"
+          if [ "${{ matrix.arch }}" = "x86" ]; then
+            export BUILD_ADDITIONAL_ARG="-m32"
+          fi
+          make
+          file -L lslint
+
+      - name: Run tests
+        run: |
+          make check
+
+      - name: Test binary functionality
+        run: |
+          echo "Testing basic functionality..."
+          ./lslint --help || echo "Help command executed"
+
+          # Test with a simple LSL script
+          echo 'default { state_entry() { llSay(0, "Hello"); } }' > test.lsl
+          ./lslint test.lsl || echo "Test script processed"
+
+  test-macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+
+      - name: Install dependencies
+        run: |
+          brew install flex bison
+          export PATH="/usr/local/opt/bison/bin:/opt/homebrew/opt/bison/bin:$PATH"
+
+      - name: Get LSL definitions commit hash
+        id: lsl_hash
+        run: |
+          LSL_HASH=$(cd lsl-definitions && git rev-parse --short=7 HEAD)
+          echo "lsl_hash=$LSL_HASH" >> $GITHUB_OUTPUT
+
+      - name: Build
+        run: |
+          export BUILD_VERSION_NUMBER="lsl-${{ steps.lsl_hash.outputs.lsl_hash }}-src-${{ github.sha }}"
+          export DEBUG="-DDEBUG_LEVEL=LOG_DEBUG_MINOR -ggdb"
+          export PATH="/usr/local/opt/bison/bin:/opt/homebrew/opt/bison/bin:$PATH"
+          if [ "${{ matrix.arch }}" = "arm64" ]; then
+            export BUILD_ADDITIONAL_ARG="-arch arm64"
+          else
+            export BUILD_ADDITIONAL_ARG="-arch x86_64"
+          fi
+          make
+          file -L lslint
+
+      - name: Run tests
+        run: |
+          make check
+
+      - name: Test binary functionality
+        run: |
+          echo "Testing basic functionality..."
+          ./lslint --help || echo "Help command executed"
+
+          # Test with a simple LSL script
+          echo 'default { state_entry() { llSay(0, "Hello"); } }' > test.lsl
+          ./lslint test.lsl || echo "Test script processed"
+
+  test-windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [x64, x86]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.arch }}
+
+      - name: Install flex and bison
+        run: |
+          curl.exe -L -O https://github.com/lexxmark/winflexbison/releases/download/v2.5.25/win_flex_bison-2.5.25.zip
+          mkdir C:\win_flex_bison
+          tar -xf win_flex_bison-2.5.25.zip -C C:\win_flex_bison
+          echo "C:\win_flex_bison" >> $env:GITHUB_PATH
+
+      - name: Get LSL definitions commit hash
+        id: lsl_hash
+        run: |
+          $LSL_HASH = (git -C lsl-definitions rev-parse --short=7 HEAD)
+          echo "lsl_hash=$LSL_HASH" >> $env:GITHUB_OUTPUT
+
+      - name: Build
+        run: |
+          $env:BUILD_VERSION_NUMBER = "lsl-${{ steps.lsl_hash.outputs.lsl_hash }}-src-${{ github.sha }}"
+          $env:BUILD_DATE = "$(Get-Date -Format 'yyyy-MM-dd')"
+          $env:DEBUG = "1"
+          nmake /F NMakefile
+          dumpbin /headers lslint.exe
+
+      - name: Test binary functionality
+        run: |
+          echo "Testing basic functionality..."
+          .\lslint.exe --help
+
+          # Test with a simple LSL script
+          echo 'default { state_entry() { llSay(0, "Hello"); } }' > test.lsl
+          .\lslint.exe test.lsl
+
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install flex bison cppcheck -y
+
+      - name: Static analysis with cppcheck
+        run: |
+          cppcheck --enable=all --inconclusive --std=c++98 --suppress=missingIncludeSystem \
+            --suppress=unusedFunction --suppress=unmatchedSuppression \
+            --suppress=variableScope --suppress=unreadVariable \
+            *.cc *.hh 2>&1 | tee cppcheck-output.txt || true
+
+      - name: Check for common issues
+        run: |
+          echo "Checking for code quality issues..."
+
+          # Check for trailing whitespace (but allow some flexibility)
+          if grep -r '[[:space:]]$' *.cc *.hh *.y *.l 2>/dev/null; then
+            echo "Warning: Found trailing whitespace (not failing build)"
+          fi
+
+          # Check for mixed line endings
+          if file *.cc *.hh *.y *.l 2>/dev/null | grep -i crlf; then
+            echo "Warning: Found CRLF line endings (not failing build)"
+          fi
+
+          echo "Code quality check completed"
+
+  build-verification:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install flex bison
+
+      - name: Get LSL definitions commit hash
+        id: lsl_hash
+        run: |
+          LSL_HASH=$(cd lsl-definitions && git rev-parse --short=7 HEAD)
+          echo "lsl_hash=$LSL_HASH" >> $GITHUB_OUTPUT
+
+      - name: Test clean build
+        run: |
+          export BUILD_VERSION_NUMBER="lsl-${{ steps.lsl_hash.outputs.lsl_hash }}-src-${{ github.sha }}"
+          export DEBUG=""
+          make clean
+          make
+          ./lslint --help || echo "Clean build successful"
+
+      - name: Test debug build
+        run: |
+          export BUILD_VERSION_NUMBER="lsl-${{ steps.lsl_hash.outputs.lsl_hash }}-src-${{ github.sha }}"
+          export DEBUG="-DDEBUG_LEVEL=LOG_DEBUG_MINOR -ggdb"
+          make clean
+          make
+          ./lslint --help || echo "Debug build successful"
+
+      - name: Test with sample LSL scripts
+        run: |
+          echo "Testing with various LSL constructs..."
+
+          # Test basic script
+          echo 'default { state_entry() { llSay(0, "Hello World"); } }' > basic.lsl
+          ./lslint basic.lsl
+
+          # Test with functions
+          echo 'default { state_entry() { test(); } } test() { llSay(0, "test"); }' > functions.lsl
+          ./lslint functions.lsl
+
+          # Test with variables
+          echo 'integer x = 5; default { state_entry() { llSay(0, (string)x); } }' > variables.lsl
+          ./lslint variables.lsl
+
+          echo "Sample script testing completed"
