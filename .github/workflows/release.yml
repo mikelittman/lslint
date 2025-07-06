@@ -217,8 +217,6 @@ jobs:
           if [ -f "artifacts/version-info/kwdb_version.txt" ]; then
             echo "RELEASE_NOTES<<EOF" >> $GITHUB_OUTPUT
             echo "Auto-generated release ${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
-            echo "" >> $GITHUB_OUTPUT
-            tail -n +2 "artifacts/version-info/kwdb_version.txt" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
           else
             echo "RELEASE_NOTES=Auto-generated release ${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
