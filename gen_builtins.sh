@@ -12,4 +12,7 @@ docker run --rm \
     -v "$(pwd):/app/output" \
     -w /app/lsl-definitions \
     ghcr.io/astral-sh/uv:debian \
-    uv run --no-sync python gen_definitions.py lsl_definitions.yaml gen_builtins_txt /app/output/builtins.txt
+    uv run python gen_definitions.py lsl_definitions.yaml gen_builtins_txt /app/output/builtins.txt
+
+# Remove the lockfile for now until one is added to the source repo
+rm -f lsl-definitions/uv.lock
