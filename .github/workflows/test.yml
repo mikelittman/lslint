@@ -20,10 +20,19 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -y
-          sudo apt-get install flex bison -y
+          sudo apt-get install flex build-essential wget -y
           if [ "${{ matrix.arch }}" = "x86" ]; then
             sudo apt-get install gcc-multilib g++-multilib || echo "Warning: multilib packages not available on this architecture"
           fi
+          # Install newer bison from source
+          wget https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz
+          tar -xf bison-3.8.2.tar.xz
+          cd bison-3.8.2
+          ./configure --prefix=/usr/local
+          make -j$(nproc)
+          sudo make install
+          cd ..
+          /usr/local/bin/bison --version
 
       - name: Get LSL definitions commit hash
         id: lsl_hash
@@ -33,6 +42,7 @@ jobs:
 
       - name: Build
         run: |
+          export PATH="/usr/local/bin:$PATH"
           export BUILD_VERSION_NUMBER="lsl-${{ steps.lsl_hash.outputs.lsl_hash }}-src-${{ github.sha }}"
           export DEBUG="-DDEBUG_LEVEL=LOG_DEBUG_MINOR -ggdb"
           if [ "${{ matrix.arch }}" = "x86" ]; then
@@ -43,6 +53,7 @@ jobs:
 
       - name: Run tests
         run: |
+          export PATH="/usr/local/bin:$PATH"
           make check
 
       - name: Test binary functionality
@@ -67,7 +78,10 @@ jobs:
       - name: Install dependencies
         run: |
           brew install flex bison
+          # Ensure we're using the latest bison
+          brew upgrade bison || true
           export PATH="/usr/local/opt/bison/bin:/opt/homebrew/opt/bison/bin:$PATH"
+          bison --version
 
       - name: Get LSL definitions commit hash
         id: lsl_hash
@@ -77,9 +91,10 @@ jobs:
 
       - name: Build
         run: |
+          export PATH="/usr/local/opt/bison/bin:/opt/homebrew/opt/bison/bin:$PATH"
           export BUILD_VERSION_NUMBER="lsl-${{ steps.lsl_hash.outputs.lsl_hash }}-src-${{ github.sha }}"
           export DEBUG="-DDEBUG_LEVEL=LOG_DEBUG_MINOR -ggdb"
-          export PATH="/usr/local/opt/bison/bin:/opt/homebrew/opt/bison/bin:$PATH"
+          bison --version
           if [ "${{ matrix.arch }}" = "arm64" ]; then
             export BUILD_ADDITIONAL_ARG="-arch arm64"
           else
@@ -90,6 +105,7 @@ jobs:
 
       - name: Run tests
         run: |
+          export PATH="/usr/local/opt/bison/bin:/opt/homebrew/opt/bison/bin:$PATH"
           make check
 
       - name: Test binary functionality
@@ -118,10 +134,12 @@ jobs:
 
       - name: Install flex and bison
         run: |
-          curl.exe -L -O https://github.com/lexxmark/winflexbison/releases/download/v2.5.25/win_flex_bison-2.5.25.zip
+          curl.exe -L -O https://github.com/lexxmark/winflexbison/releases/download/v2.5.26/win_flex_bison-2.5.26.zip
           mkdir C:\win_flex_bison
-          tar -xf win_flex_bison-2.5.25.zip -C C:\win_flex_bison
+          tar -xf win_flex_bison-2.5.26.zip -C C:\win_flex_bison
           echo "C:\win_flex_bison" >> $env:GITHUB_PATH
+          # Verify bison version
+          C:\win_flex_bison\win_bison.exe --version
 
       - name: Get LSL definitions commit hash
         id: lsl_hash
@@ -134,6 +152,7 @@ jobs:
           $env:BUILD_VERSION_NUMBER = "lsl-${{ steps.lsl_hash.outputs.lsl_hash }}-src-${{ github.sha }}"
           $env:BUILD_DATE = "$(Get-Date -Format 'yyyy-MM-dd')"
           $env:DEBUG = "1"
+          C:\win_flex_bison\win_bison.exe --version
           nmake /F NMakefile
           dumpbin /headers lslint.exe
 
@@ -156,10 +175,20 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -y
-          sudo apt-get install flex bison cppcheck -y
+          sudo apt-get install flex cppcheck build-essential wget -y
+          # Install newer bison from source
+          wget https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz
+          tar -xf bison-3.8.2.tar.xz
+          cd bison-3.8.2
+          ./configure --prefix=/usr/local
+          make -j$(nproc)
+          sudo make install
+          cd ..
+          /usr/local/bin/bison --version
 
       - name: Static analysis with cppcheck
         run: |
+          export PATH="/usr/local/bin:$PATH"
           cppcheck --enable=all --inconclusive --std=c++98 --suppress=missingIncludeSystem \
             --suppress=unusedFunction --suppress=unmatchedSuppression \
             --suppress=variableScope --suppress=unreadVariable \
@@ -167,6 +196,7 @@ jobs:
 
       - name: Check for common issues
         run: |
+          export PATH="/usr/local/bin:$PATH"
           echo "Checking for code quality issues..."
 
           # Check for trailing whitespace (but allow some flexibility)
@@ -191,7 +221,16 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install flex bison
+          sudo apt-get install flex build-essential wget
+          # Install newer bison from source
+          wget https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz
+          tar -xf bison-3.8.2.tar.xz
+          cd bison-3.8.2
+          ./configure --prefix=/usr/local
+          make -j$(nproc)
+          sudo make install
+          cd ..
+          /usr/local/bin/bison --version
 
       - name: Get LSL definitions commit hash
         id: lsl_hash
@@ -201,6 +240,7 @@ jobs:
 
       - name: Test clean build
         run: |
+          export PATH="/usr/local/bin:$PATH"
           export BUILD_VERSION_NUMBER="lsl-${{ steps.lsl_hash.outputs.lsl_hash }}-src-${{ github.sha }}"
           export DEBUG=""
           make clean
@@ -209,6 +249,7 @@ jobs:
 
       - name: Test debug build
         run: |
+          export PATH="/usr/local/bin:$PATH"
           export BUILD_VERSION_NUMBER="lsl-${{ steps.lsl_hash.outputs.lsl_hash }}-src-${{ github.sha }}"
           export DEBUG="-DDEBUG_LEVEL=LOG_DEBUG_MINOR -ggdb"
           make clean
@@ -217,6 +258,7 @@ jobs:
 
       - name: Test with sample LSL scripts
         run: |
+          export PATH="/usr/local/bin:$PATH"
           echo "Testing with various LSL constructs..."
 
           # Test basic script
@@ -224,7 +266,7 @@ jobs:
           ./lslint basic.lsl
 
           # Test with functions
-          echo 'default { state_entry() { test(); } } test() { llSay(0, "test"); }' > functions.lsl
+          echo 'test() { llSay(0, "test"); } default { state_entry() { test(); } }' > functions.lsl
           ./lslint functions.lsl
 
           # Test with variables
