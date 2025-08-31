@@ -18,6 +18,10 @@ jobs:
         with:
           submodules: "recursive"
 
+      - name: Update submodules to latest on their tracked branch
+        run: |
+          git submodule update --init --remote --recursive
+
       - name: Update builtins
         run: |
           ./gen_builtins.sh
